@@ -70,17 +70,19 @@ end
 
 GLMakie.activate!(inline=false)
 
-n = 75
+n = 50
 
 data = Observable([rand(Uniform(-1,1), 2) for i in 1:n])
 
-data[][1:4]
 
 g1 = @lift([$data[i][1] for i=1:n])
 g2 = @lift([$data[i][2] for i=1:n])
 
 
 f, ax, im = scatter(g1,g2) #heatmap(data, colormap = [:black, :white]; axis = (; aspect = 1,xzoomlock=true,yzoomlock=true), )
+
+display(GLMakie.Screen(),f)
+
 
 #deactivate_interaction!(ax, :rectanglezoom,)
 
@@ -91,7 +93,7 @@ f, ax, im = scatter(g1,g2) #heatmap(data, colormap = [:black, :white]; axis = (;
 
 f[2, 1] = buttongrid = GridLayout(tellwidth = false)
 
-button1 = buttongrid[1,1] = Button(f, label="reset")
+button1 = buttongrid[1,1] = Button(f, label="random_fill")
 
 on(button1.clicks) do click1
     data[] = [rand(Uniform(-1,1), 2) for i in 1:n]
@@ -121,8 +123,18 @@ end
 #     println("end")
 # end
 
+# button4 = buttongrid[1,3] = Button(f, label="reset_all")
+
+# on(button4.clicks) do click4
+#     data[] = [rand(Uniform(-1,1), 2) for i in 1:n]
+#     notify(data)
+#     ax_E = scatter(1,energy(data[]))
+# end
+
+
+
 sg = SliderGrid(f[3, 1],
-(label = "temprature", range = 0.0001:0.01:2.7, format = "{:.1f}K", startvalue = 2),
+(label = "temprature", range = 10^(-4):10^(-4):30*(10^(-3)), format = "{:.5f}K", startvalue = 10^(-3)),
 )
 
 temperature_ = sg.sliders[1].value
@@ -139,14 +151,64 @@ temperature_ = sg.sliders[1].value
 #     sleep(0.05)       
 # end
 
+f_E, ax_E = scatter(1,energy(data[]))
+
+#display(GLMakie.Screen(),f_E)
+
+# button_E_1 = buttongrid[1,1] = Button(f_E, label="reset_graph")
+
+# on(button_E_1.clicks) do click_E_1
+#     scatter(ax_E,1,energy(data[]))
+# end
+
+
+
 T0 = 10
 
-function while_run()
+
+#push!(data_1[],[energy(data[]),2])
+function while_run()                        #### currently without updating the energy plot
+    # f_E, ax_E = scatter(1,energy(data[]))
+
+    # display(GLMakie.Screen(),f_E)
+
+    # button_E_1 = buttongrid[2,1] = Button(f_E, label="reset_graph")
+
+    # on(button_E_1.clicks) do click_E_1
+    #     scatter(1,energy(data[]))
+    # end
+    
+    j=0
     while Bool(stop_butn[])==true
         data[] = monte(data[],temperature_[],T0)
-        notify(data) 
+        notify(data)
+    
+        # j=j+1
+    
+        #println("fine : ",j)
+        # scatter!(j,energy(data[]),color=:blue)
+    
         sleep(0.01)       
     end
 end
 
+#ax_E = scatter(1,3)
+
 while_run()
+
+
+f_E, ax_E = scatter(1,energy(data[]))
+
+j
+j=0
+while Bool(stop_butn[])==true
+    data[] = monte(data[],temperature_[],T0)
+    notify(data)
+
+    j=j+1
+
+    #println("fine : ",j)
+    scatter!(j,energy(data[]),color=:blue)
+
+    sleep(0.001)       
+end
